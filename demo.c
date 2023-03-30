@@ -40,7 +40,12 @@ static int win_x, win_y;
 static int mouse_down[3];
 static int omx, omy, mx, my;
 
+static int max_iter = 100;
+static int iterations = 0;
 
+
+static float* save_array;
+        
 /*
   ----------------------------------------------------------------------
    free/clear/allocate simulation data
@@ -318,18 +323,54 @@ static void idle_func(void)
         react_ns_p_cell = 0.0;
         vel_ns_p_cell = 0.0;
         dens_ns_p_cell = 0.0;
-        times = 1;
+        times = 1;        
     } else {
         times++;
     }
-
+    save_array[iterations] = (react_ns_p_cell + vel_ns_p_cell + dens_ns_p_cell) / times;
+    save_array[iterations+1] = react_ns_p_cell / times;
+    save_array[iterations+2] = vel_ns_p_cell / times;
+    save_array[iterations+3] = dens_ns_p_cell / times;
+    iterations += 4;
     glutSetWindow(win_id);
     glutPostRedisplay();
+    if(iterations == 4*max_iter){
+        //for (int i=0;i < 4*max_iter;i++){
+        //    printf("%d",save_array[i]);
+        //}
+        FILE *file = fopen("output.txt","w");
+        if (file != NULL) {
+          printf("File created successfully!\n");
+        }
+        else {
+          printf("Failed to create the file.\n");
+          // exit status for OS that an error occurred
+          return -1;
+        }
+        for (int i=0;i < 4*max_iter;){
+            fprintf(file, gcvt(save_array[i]));
+            printf("Escribio el total");
+            fprintf(file,",");
+            fprintf(file,gcvt(save_array[i+1]));
+            printf("Escribio el react");
+            fprintf(file,",");
+            fprintf(file,gcvt(save_array[i+2]));
+            printf("Escribio la velocidad");
+            fprintf(file,",");
+            fprintf(file,gcvt(save_array[i+3]));
+            printf("Escribio la densidad");
+            fprintf(file,"\n");
+            i += 4;
+        }
+        glutLeaveMainLoop();
+    } 
 }
-
+    
 static void display_func(void)
 {
     pre_display();
+
+    
 
     if (dvel) {
         draw_velocity();
@@ -430,7 +471,12 @@ int main(int argc, char** argv)
     win_y = 512;
     open_glut_window();
 
+    save_array =  (float*)malloc(4 * max_iter * sizeof(float));  
+    for (int i;i < 4*max_iter;i++){
+            save_array[i] = 0.0f;
+    }
     glutMainLoop();
 
     exit(0);
 }
+

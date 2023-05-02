@@ -2,7 +2,8 @@
 
 #include "solver.h"
 
-#define IX(i, j) ((i) + (n + 2) * (j))
+// Invertir el orden de los i y j hace que se mantenga mas en cache
+#define IX(i, j) ((j) + (n + 2) * (i))
 #define SWAP(x0, x)      \
     {                    \
         float* tmp = x0; \
@@ -38,10 +39,11 @@ static void set_bnd(unsigned int n, boundary b, float* x)
 
 static void lin_solve(unsigned int n, boundary b, float* x, const float* x0, float a, float c)
 {
+    float c0 = 1.0f/c;
     for (unsigned int k = 0; k < 20; k++) {
         for (unsigned int i = 1; i <= n; i++) {
             for (unsigned int j = 1; j <= n; j++) {
-                x[IX(i, j)] = (x0[IX(i, j)] + a * (x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)])) / c;
+                x[IX(i, j)] = (x0[IX(i, j)] + a * (x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)])) * c0;
             }
         }
         set_bnd(n, b, x);
@@ -90,9 +92,10 @@ static void advect(unsigned int n, boundary b, float* d, const float* d0, const 
 
 static void project(unsigned int n, float* u, float* v, float* p, float* div)
 {
+    float n0 = -0.5f / n;
     for (unsigned int i = 1; i <= n; i++) {
         for (unsigned int j = 1; j <= n; j++) {
-            div[IX(i, j)] = -0.5f * (u[IX(i + 1, j)] - u[IX(i - 1, j)] + v[IX(i, j + 1)] - v[IX(i, j - 1)]) / n;
+            div[IX(i, j)] = n0 * (u[IX(i + 1, j)] - u[IX(i - 1, j)] + v[IX(i, j + 1)] - v[IX(i, j - 1)]);
             p[IX(i, j)] = 0;
         }
     }
@@ -100,11 +103,11 @@ static void project(unsigned int n, float* u, float* v, float* p, float* div)
     set_bnd(n, NONE, p);
 
     lin_solve(n, NONE, p, div, 1, 4);
-
+    n0 = 0.5f * n;
     for (unsigned int i = 1; i <= n; i++) {
         for (unsigned int j = 1; j <= n; j++) {
-            u[IX(i, j)] -= 0.5f * n * (p[IX(i + 1, j)] - p[IX(i - 1, j)]);
-            v[IX(i, j)] -= 0.5f * n * (p[IX(i, j + 1)] - p[IX(i, j - 1)]);
+            u[IX(i, j)] -= n0 * (p[IX(i + 1, j)] - p[IX(i - 1, j)]);
+            v[IX(i, j)] -= n0 * (p[IX(i, j + 1)] - p[IX(i, j - 1)]);
         }
     }
     set_bnd(n, VERTICAL, u);

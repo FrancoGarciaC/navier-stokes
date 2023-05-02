@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-std=c11 -Wall -Wextra -Wno-unused-parameter
+CFLAGS=-std=c11 -Wall -Wextra -Wno-unused-parameter -march=native -funroll-loops -Ofast
 LDFLAGS=
 
 TARGETS=demo headless

@@ -1,5 +1,5 @@
-CC=gcc
-CFLAGS=-std=c11 -Wall -Wextra -Wno-unused-parameter -march=native -funroll-loops -Ofast
+CC=clang
+CFLAGS=-std=c11 -Wall -Wextra -Wno-unused-parameter -march=native -funroll-loops -Ofast -Rpass=loop-vectorize -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize
 LDFLAGS=
 
 TARGETS=demo headless

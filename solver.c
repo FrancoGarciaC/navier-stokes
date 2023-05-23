@@ -87,7 +87,7 @@ static void diffuse(unsigned int n, boundary b, float* x, const float* x0, float
     lin_solve(n, b, x, x0, a, 1 + 4 * a);
 }
 
-static void advect(unsigned int n, boundary b, float* d, const float* d0, const float* u, const float* v, float dt)
+static void advect(unsigned int n, boundary b, float* restrict d, const float* restrict d0, const float* restrict u, const float* restrict v, float dt)
 {
     int i0, i1, j0, j1;
     float x, y, s0, t0, s1, t1;
@@ -121,7 +121,7 @@ static void advect(unsigned int n, boundary b, float* d, const float* d0, const 
     set_bnd(n, b, d);
 }
 
-static void project(unsigned int n, float* u, float* v, float* p, float* div)
+static void project(unsigned int n, float* restrict u, float* restrict v, float* restrict p, float* restrict div)
 {
     float n0 = -0.5f / n;
     for (unsigned int i = 1; i <= n; i++) {
